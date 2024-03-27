@@ -7,14 +7,13 @@ def getLatestTags() {
     def process = sh(script: gitCommand, returnStdout: true).trim()
 
     // Read the output of the git command
-    def outputLines = process.split('\n')
+    def outputLines = process.readLines()
 
     // Extract tag names from the output
     outputLines.each { line ->
-        def parts = line.split("\t")
-        def ref = parts[1]
-        if (ref =~ /refs\/tags\/(.+)/) {  // Fix: Use ~ instead of RegExp
-            tags.add(RegExp.$1.trim())
+        def matcher = line =~ /refs\/tags\/(.+)/
+        if (matcher) {
+            tags.add(matcher[0][1].trim())
         }
     }
 
