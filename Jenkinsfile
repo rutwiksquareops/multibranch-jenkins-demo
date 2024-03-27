@@ -4,11 +4,10 @@ def getLatestTags() {
 
     // Run git command to fetch tags
     def gitCommand = 'git ls-remote --tags origin'
-    def process = gitCommand.execute()
-    process.waitFor()
+    def process = sh(script: gitCommand, returnStdout: true).trim()
 
     // Read the output of the git command
-    def output = process.in.text
+    def output = process
 
     // Extract tag names from the output
     output.eachLine { line ->
@@ -21,30 +20,4 @@ def getLatestTags() {
 
     // Return the list of tags
     return tags
-}
-
-pipeline {
-    agent any
-
-    stages {
-        stage('Fetch Latest Tags') {
-            steps {
-                script {
-                    def latestTags = getLatestTags()
-                    echo "Latest tags: ${latestTags}"
-                    // Check if there are any new release tags
-                    def newReleaseTags = latestTags.findAll { tag -> tag =~ /^v\d+\.\d+(\.\d+)?$/ }
-                    if (newReleaseTags) {
-                        echo "New release tags found: ${newReleaseTags}"
-                        // Trigger the subsequent stages or tasks here
-                        // For example:
-                        // build newReleaseTags
-                    } else {
-                        echo "No new release tags found."
-                    }
-                }
-            }
-        }
-        // Add more stages as needed
-    }
 }
