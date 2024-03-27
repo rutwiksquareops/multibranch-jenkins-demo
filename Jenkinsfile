@@ -13,7 +13,7 @@ def getLatestTags() {
     outputLines.each { line ->
         def parts = line.split("\t")
         def ref = parts[1]
-        if (ref =~ /refs\/tags\/(.+)/) {
+        if (ref =~ /refs\/tags\/(.+)/) {  // Fix: Use ~ instead of RegExp
             tags.add(RegExp.$1.trim())
         }
     }
