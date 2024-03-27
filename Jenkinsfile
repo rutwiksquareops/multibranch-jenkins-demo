@@ -1,20 +1,51 @@
 pipeline {
-
     agent {
-        node {
-            label 'master'
+        kubernetes {
+            label 'jenkinsrun'
+            defaultContainer 'builder'
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: "cicd-services"
+            operator: "In"
+            values:
+            - "true"
+  containers:
+  - name: builder
+    image: squareops/jenkins-build-agent:v4
+    securityContext:
+      privileged: true
+    volumeMounts:
+      - name: builder-storage
+        mountPath: /var/lib/docker
+    resources:
+      requests:
+        cpu: 200m
+        memory: 300Mi
+      limits:
+        cpu: 2000m
+        memory: 2500Mi
+  volumes:
+    - name: builder-storage
+      emptyDir: {}
+"""
         }
     }
 
     options {
         buildDiscarder logRotator( 
-                    daysToKeepStr: '16', 
-                    numToKeepStr: '10'
-            )
+            daysToKeepStr: '16', 
+            numToKeepStr: '10'
+        )
     }
 
     stages {
-        
         stage('Cleanup Workspace') {
             steps {
                 cleanWs()
@@ -34,7 +65,7 @@ pipeline {
             }
         }
 
-        stage(' Unit Testing') {
+        stage('Unit Testing') {
             steps {
                 sh """
                 echo "Running Unit Tests"
@@ -64,6 +95,5 @@ pipeline {
                 """
             }
         }
-
     }   
 }
